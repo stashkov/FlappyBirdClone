@@ -1,12 +1,13 @@
 package graphics;
 
+import utils.BufferUtils;
+
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
 import java.io.IOException;
 
 import static org.lwjgl.opengl.GL11.*;
-import static utils.BufferUtils.createIntBuffer;
 
 public class Texture
 {
@@ -19,7 +20,6 @@ public class Texture
     }
 
     private int load( String path )
-
     {
         int[] pixels = null;
         try
@@ -52,8 +52,9 @@ public class Texture
 
 
         glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );  // upscale
-        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, createIntBuffer( data ) );
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );  // upscale  //GL_LINEAR will cause blurriness
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0,
+                GL_RGBA, GL_UNSIGNED_BYTE, BufferUtils.createIntBuffer( data ) );
         glBindTexture( GL_TEXTURE_2D, 0 ); //deselect everything
         return result;
     }
