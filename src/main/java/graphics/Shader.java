@@ -57,6 +57,7 @@ public class Shader
 
     public int getUniform( String name )
     {
+        // optimization, because we will be rendering many times a second
         if ( locationCache.containsKey( name ) )
         {
             return locationCache.get( name );
