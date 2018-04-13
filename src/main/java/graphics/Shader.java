@@ -52,12 +52,13 @@ public class Shader
 
     public void setUniformMat4f( String name, Matrix4f matrix )
     {
-        glUniformMatrix4fv(getUniform( name ), false, matrix.toFloatBuffer() );
+        glUniformMatrix4fv( getUniform( name ), false, matrix.toFloatBuffer() );
     }
 
     public int getUniform( String name )
     {
-        if (locationCache.containsKey( name )){
+        if ( locationCache.containsKey( name ) )
+        {
             return locationCache.get( name );
         }
         int result = glGetUniformLocation( ID, name );
