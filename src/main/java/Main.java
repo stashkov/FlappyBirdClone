@@ -1,3 +1,6 @@
+import graphics.Shader;
+import level.Level;
+import maths.Matrix4f;
 import org.lwjgl.*;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
@@ -8,17 +11,19 @@ import java.nio.*;
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL20.GL_SHADING_LANGUAGE_VERSION;
 import static org.lwjgl.system.MemoryStack.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
-public class Main implements Runnable
-{
+public class Main implements Runnable {
 
     private int width = 1280;
     private int height = 720;
 
     // The window handle
     private long window;
+
+    private Level level;
 
     public void run() {
         System.out.println("Hello LWJGL " + Version.getVersion() + "!");
@@ -41,7 +46,7 @@ public class Main implements Runnable
         GLFWErrorCallback.createPrint(System.err).set();
 
         // Initialize GLFW. Most GLFW functions will not work before doing this.
-        if ( !glfwInit() )
+        if (!glfwInit())
             throw new IllegalStateException("Unable to initialize GLFW");
 
         // Configure GLFW
@@ -51,17 +56,17 @@ public class Main implements Runnable
 
         // Create the window
         window = glfwCreateWindow(width, height, "Hello World!", NULL, NULL);
-        if ( window == NULL )
+        if (window == NULL)
             throw new RuntimeException("Failed to create the GLFW window");
 
         // Setup a key callback. It will be called every time a key is pressed, repeated or released.
         glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
-            if ( key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE )
+            if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
                 glfwSetWindowShouldClose(window, true); // We will detect this in the rendering loop
         });
 
         // Get the thread stack and push a new frame
-        try ( MemoryStack stack = stackPush() ) {
+        try (MemoryStack stack = stackPush()) {
             IntBuffer pWidth = stack.mallocInt(1); // int*
             IntBuffer pHeight = stack.mallocInt(1); // int*
 
@@ -79,7 +84,13 @@ public class Main implements Runnable
             );
         } // the stack frame is popped automatically
 
-        glfwSetKeyCallback( window, new Input() );
+        glfwSetKeyCallback(window, new Input());
+
+        // MAC OS CORE
+//        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+//        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+//        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+//        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
         // Make the OpenGL context current
         glfwMakeContextCurrent(window);
@@ -100,14 +111,34 @@ public class Main implements Runnable
 
         // Set the clear color
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        glEnable( GL_DEPTH_TEST );
-        System.out.println("OpenGL: " + glGetString( GL_VERSION ));
+        glEnable(GL_DEPTH_TEST);
+        System.out.println("OpenGL: " + glGetString(GL_VERSION));
+
+        Shader.loadAll();
+
+        Shader.BACKGROUND.enable();
+
+        Matrix4f projectionMatrix = Matrix4f.orthographic(-10.0f, 10.0f, -10.0f * 9.0f / 16.0f, 10.0f * 9.0f / 16.0f, -1.0f, 1.0f);
+        Shader.BACKGROUND.setUniformMat4f("pr_matrix", projectionMatrix);
+
+        Shader.BACKGROUND.disable();
+        level = new Level();
+
+
+        System.out.println("Supported GLSL version is: " + glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+
+        int i = glGetError();
+        if (i != GL_NO_ERROR) {
+            System.out.println(i);
+        }
 
 
         // Run the rendering loop until the user has attempted to close
         // the window or has pressed the ESCAPE key.
-        while ( !glfwWindowShouldClose(window) ) {
+        while (!glfwWindowShouldClose(window)) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
+
 
             render();
             update();
@@ -116,19 +147,18 @@ public class Main implements Runnable
         }
     }
 
-    private void update()
-    {
+    private void update() {
         // Poll for window events. The key callback above will only be
         // invoked during this call.
         glfwPollEvents();
-        if (Input.keys[GLFW_KEY_SPACE]){
+        if (Input.keys[GLFW_KEY_SPACE]) {
             System.out.println("FLAP!");
         }
     }
 
-    private void render()
-    {
-        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    private void render() {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        level.render();
         glfwSwapBuffers(window); // swap the color buffers
     }
 
