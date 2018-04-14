@@ -29,13 +29,13 @@ public class Texture {
 
     private int createTexture( int[] data )
     {
-        int result = glGenTextures();
-        glBindTexture(GL_TEXTURE_2D, result);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        int texture = glGenTextures();
+        glBindTexture(GL_TEXTURE_2D, texture); // select the layer
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // anti aliasing (don't want textures to be blurred)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, BufferUtils.createIntBuffer(data));
         glBindTexture(GL_TEXTURE_2D, 0);
-        return result;
+        return texture;
     }
 
     private int[] convertARGBtoRGBA( int[] pixels )
