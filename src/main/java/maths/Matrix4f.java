@@ -1,21 +1,20 @@
 package maths;
 
+import java.nio.FloatBuffer;
 
 import utils.BufferUtils;
 
-import java.nio.FloatBuffer;
-
+@SuppressWarnings( "PointlessArithmeticExpression" )
 public class Matrix4f
 {
 
     private static final int SIZE = 4;
-    public float[] elements = new float[SIZE * SIZE];
+    private float[] elements = new float[SIZE * SIZE];
 
-    public Matrix4f()
+    private Matrix4f()
     {
 
     }
-
 
     public static Matrix4f identity()
     {
@@ -28,6 +27,7 @@ public class Matrix4f
         result.elements[1 + 1 * SIZE] = 1.0f;
         result.elements[2 + 2 * SIZE] = 1.0f;
         result.elements[3 + 3 * SIZE] = 1.0f;
+
         return result;
     }
 
@@ -50,13 +50,17 @@ public class Matrix4f
                                          float far )
     {
         Matrix4f result = identity();
+
         result.elements[0 + 0 * SIZE] = 2.0f / ( right - left );
+
         result.elements[1 + 1 * SIZE] = 2.0f / ( top - bottom );
+
         result.elements[2 + 2 * SIZE] = 2.0f / ( near - far );
 
         result.elements[0 + 3 * SIZE] = ( left + right ) / ( left - right );
         result.elements[1 + 3 * SIZE] = ( bottom + top ) / ( bottom - top );
         result.elements[2 + 3 * SIZE] = ( far + near ) / ( far - near );
+
         return result;
     }
 
@@ -88,12 +92,11 @@ public class Matrix4f
 
         result.elements[0 + 1 * SIZE] = -sin;
         result.elements[1 + 1 * SIZE] = cos;
+
         return result;
-
-
     }
 
-    public Matrix4f multiply( Matrix4f matrix4f )
+    public Matrix4f multiply( Matrix4f matrix )
     {
         Matrix4f result = new Matrix4f();
         for ( int y = 0; y < SIZE; y++ )
@@ -103,7 +106,7 @@ public class Matrix4f
                 float sum = 0.0f;
                 for ( int e = 0; e < SIZE; e++ )
                 {
-                    sum += this.elements[x + e * SIZE] * matrix4f.elements[e + y * SIZE];
+                    sum += this.elements[x + e * SIZE] * matrix.elements[e + y * SIZE];
                 }
                 result.elements[x + y * SIZE] = sum;
             }
