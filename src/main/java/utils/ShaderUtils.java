@@ -1,18 +1,19 @@
 package utils;
 
-import static org.lwjgl.opengl.GL11.GL_FALSE;
+import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 
 public class ShaderUtils
 {
+
     private ShaderUtils()
     {
     }
 
-    public static int load( String vertexShaderPath, String fragmentShaderPath )
+    public static int load( String vertPath, String fragPath )
     {
-        String vertex = FileUtils.loadAsString( vertexShaderPath );
-        String fragment = FileUtils.loadAsString( fragmentShaderPath );
+        String vertex = FileUtils.loadAsString( vertPath );
+        String fragment = FileUtils.loadAsString( fragPath );
         return create( vertex, fragment );
     }
 
@@ -23,10 +24,9 @@ public class ShaderUtils
         int fragmentID = glCreateShader( GL_FRAGMENT_SHADER );
         glShaderSource( vertexID, vertex );
         glShaderSource( fragmentID, fragment );
-        glCompileShader( vertexID );
-        if ( checkSuccessfulCompilation( vertexID, "vertex" ) ) return -1;
-        glCompileShader( fragmentID );
-        if ( checkSuccessfulCompilation( fragmentID, "fragment" ) ) return -1;
+
+        if ( isCompileFailed( "vertex", vertexID ) ) return -1;
+        if ( isCompileFailed( "fragment", fragmentID ) ) return -1;
 
         glAttachShader( program, vertexID );
         glAttachShader( program, fragmentID );
@@ -39,17 +39,16 @@ public class ShaderUtils
         return program;
     }
 
-    private static boolean checkSuccessfulCompilation( int shaderID, String message )
+    private static boolean isCompileFailed( String shaderType, int shaderTypeID )
     {
-        message = "Failed to compile " + message + " shader!";
-        if ( glGetShaderi( shaderID, GL_COMPILE_STATUS ) == GL_FALSE )
+        glCompileShader( shaderTypeID );
+        if ( glGetShaderi( shaderTypeID, GL_COMPILE_STATUS ) == GL_FALSE )
         {
-            System.err.println( message );
-            System.err.println( glGetShaderInfoLog( shaderID ) );
+            System.err.println( "Failed to compile " + shaderType + " shader!" );
+            System.err.println( glGetShaderInfoLog( shaderTypeID ) );
             return true;
         }
         return false;
     }
-
 
 }
