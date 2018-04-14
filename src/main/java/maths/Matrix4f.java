@@ -68,9 +68,6 @@ public class Matrix4f
     /**
      * We do not need to rotate in 3D, we only need to rotate by z
      * Which is 2D rotation
-     *
-     * @param angle
-     * @return
      */
     public static Matrix4f rotate( float angle )
     {
