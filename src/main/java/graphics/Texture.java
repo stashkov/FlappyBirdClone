@@ -24,15 +24,19 @@ public class Texture {
 	private int load(String path) {
         int[] pixels = readPixels( path );
         int[] data = convertARGBtoRGBA( pixels );
-		
-		int result = glGenTextures();
-		glBindTexture(GL_TEXTURE_2D, result);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, BufferUtils.createIntBuffer(data));
-		glBindTexture(GL_TEXTURE_2D, 0);
-		return result;
+        return createTexture( data );
 	}
+
+    private int createTexture( int[] data )
+    {
+        int result = glGenTextures();
+        glBindTexture(GL_TEXTURE_2D, result);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, BufferUtils.createIntBuffer(data));
+        glBindTexture(GL_TEXTURE_2D, 0);
+        return result;
+    }
 
     private int[] convertARGBtoRGBA( int[] pixels )
     {
