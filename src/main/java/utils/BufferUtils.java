@@ -5,34 +5,37 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
+
+/**
+ * because lwjgl does not want arrays, it wants buffers
+ * this is a helper class to convert array to buffers
+ */
 public class BufferUtils
 {
+
     private BufferUtils()
     {
-
     }
 
     public static ByteBuffer createByteBuffer( byte[] array )
     {
-        ByteBuffer result = ByteBuffer.allocateDirect( array.length )
-                .order( ByteOrder.nativeOrder() );
+        ByteBuffer result = ByteBuffer.allocateDirect( array.length ).order( ByteOrder.nativeOrder() );
         result.put( array ).flip();
         return result;
     }
 
     public static FloatBuffer createFloatBuffer( float[] array )
     {
-        FloatBuffer result = ByteBuffer.allocateDirect( array.length * 4 )
-                .order( ByteOrder.nativeOrder() ).asFloatBuffer();
+        FloatBuffer result = ByteBuffer.allocateDirect( array.length << 2 ).order( ByteOrder.nativeOrder() ).asFloatBuffer();
         result.put( array ).flip();
         return result;
     }
 
     public static IntBuffer createIntBuffer( int[] array )
     {
-        IntBuffer result = ByteBuffer.allocateDirect( array.length * 4 )
-                .order( ByteOrder.nativeOrder() ).asIntBuffer();
+        IntBuffer result = ByteBuffer.allocateDirect( array.length << 2 ).order( ByteOrder.nativeOrder() ).asIntBuffer();
         result.put( array ).flip();
         return result;
     }
+
 }
