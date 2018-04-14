@@ -11,6 +11,11 @@ import static org.lwjgl.opengl.GL20.*;
 
 public class Shader
 {
+    public static Shader BACKGROUND; // we don't want to have more than one instance of this Shader
+
+    public static final int VERTEX_ATTRIBUTE = 0; // attributes are set every single vertex
+    public static final int TEXTURE_COORDINATE_ATTRIBUTE = 0;
+
     private final int ID;
     private Map<String, Integer> locationCache = new HashMap<>();
 
@@ -72,6 +77,11 @@ public class Shader
             locationCache.put( name, result );
         }
         return result;
+    }
+
+    public static void loadAll()
+    {
+        BACKGROUND = new Shader( "shaders/bg.vert", "shaders/bg.frag" );
     }
 
 }
