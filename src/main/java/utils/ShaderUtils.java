@@ -41,7 +41,7 @@ public class ShaderUtils
 
     private static boolean checkSuccessfulCompilation( int shaderID, String message )
     {
-        message = "Failed to compile " + message + "shader!";
+        message = "Failed to compile " + message + " shader!";
         if ( glGetShaderi( shaderID, GL_COMPILE_STATUS ) == GL_FALSE )
         {
             System.err.println( message );
