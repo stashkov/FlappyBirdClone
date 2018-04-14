@@ -33,14 +33,6 @@ public class Matrix4f
 
     /**
      * In orthograpic projection objects that are further away do not look smaller
-     *
-     * @param left
-     * @param right
-     * @param bottom
-     * @param top
-     * @param near
-     * @param far
-     * @return
      */
     public static Matrix4f orthographic( float left,
                                          float right,
