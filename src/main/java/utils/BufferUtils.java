@@ -12,7 +12,7 @@ public class BufferUtils
 
     }
 
-    public ByteBuffer createByteBuffer( byte[] array )
+    public static ByteBuffer createByteBuffer( byte[] array )
     {
         ByteBuffer result = ByteBuffer.allocateDirect( array.length )
                 .order( ByteOrder.nativeOrder() );
