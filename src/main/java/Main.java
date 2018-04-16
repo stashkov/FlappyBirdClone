@@ -1,169 +1,147 @@
 import graphics.Shader;
+import input.Input;
 import level.Level;
 import maths.Matrix4f;
-import org.lwjgl.*;
-import org.lwjgl.glfw.*;
-import org.lwjgl.opengl.*;
-import org.lwjgl.system.*;
+import org.lwjgl.glfw.GLFWVidMode;
+import org.lwjgl.opengl.GL;
 
-import java.nio.*;
-
-import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL20.GL_SHADING_LANGUAGE_VERSION;
-import static org.lwjgl.system.MemoryStack.*;
-import static org.lwjgl.system.MemoryUtil.*;
+import static org.lwjgl.opengl.GL13.GL_TEXTURE1;
+import static org.lwjgl.opengl.GL13.glActiveTexture;
+import static org.lwjgl.system.MemoryUtil.NULL;
 
-public class Main implements Runnable {
+public class Main implements Runnable
+{
 
     private int width = 1280;
     private int height = 720;
 
-    // The window handle
+    private Thread thread;
+    private boolean running = false;
+
     private long window;
 
     private Level level;
 
-    public void run() {
-        System.out.println("Hello LWJGL " + Version.getVersion() + "!");
-
-        init();
-        loop();
-
-        // Free the window callbacks and destroy the window
-        glfwFreeCallbacks(window);
-        glfwDestroyWindow(window);
-
-        // Terminate GLFW and free the error callback
-        glfwTerminate();
-        glfwSetErrorCallback(null).free();
+    public void start()
+    {
+        running = true;
+        thread = new Thread( this, "Game" );
+        thread.start();
     }
 
-    private void init() {
-        // Setup an error callback. The default implementation
-        // will print the error message in System.err.
-        GLFWErrorCallback.createPrint(System.err).set();
+    private void init()
+    {
+        if ( !glfwInit() )
+        {
+            System.err.println( "Could not initialize GLFW!" );
+            return;
+        }
 
-        // Initialize GLFW. Most GLFW functions will not work before doing this.
-        if (!glfwInit())
-            throw new IllegalStateException("Unable to initialize GLFW");
+        glfwWindowHint( GLFW_RESIZABLE, GL_TRUE );
+        window = glfwCreateWindow( width, height, "Flappy", NULL, NULL );
+        if ( window == NULL )
+        {
+            System.err.println( "Could not create GLFW window!" );
+            return;
+        }
 
-        // Configure GLFW
-        glfwDefaultWindowHints(); // optional, the current window hints are already the default
-        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // the window will stay hidden after creation
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // the window will be resizable
+        GLFWVidMode vidmode = glfwGetVideoMode( glfwGetPrimaryMonitor() );
+        glfwSetWindowPos( window, ( vidmode.width() - width ) / 2, ( vidmode.height() - height ) / 2 );
 
-        // Create the window
-        window = glfwCreateWindow(width, height, "Hello World!", NULL, NULL);
-        if (window == NULL)
-            throw new RuntimeException("Failed to create the GLFW window");
+        glfwSetKeyCallback( window, new Input() );
 
-        // Setup a key callback. It will be called every time a key is pressed, repeated or released.
-        glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
-            if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
-                glfwSetWindowShouldClose(window, true); // We will detect this in the rendering loop
-        });
+        glfwMakeContextCurrent( window );
+        glfwShowWindow( window );
+//		GLContext.createFromCurrent();
 
-        // Get the thread stack and push a new frame
-        try (MemoryStack stack = stackPush()) {
-            IntBuffer pWidth = stack.mallocInt(1); // int*
-            IntBuffer pHeight = stack.mallocInt(1); // int*
-
-            // Get the window size passed to glfwCreateWindow
-            glfwGetWindowSize(window, pWidth, pHeight);
-
-            // Get the resolution of the primary monitor
-            GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-
-            // Center the window
-            glfwSetWindowPos(
-                    window,
-                    (vidmode.width() - pWidth.get(0)) / 2,
-                    (vidmode.height() - pHeight.get(0)) / 2
-            );
-        } // the stack frame is popped automatically
-
-        glfwSetKeyCallback(window, new Input());
-
-        // MAC OS CORE
-//        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-//        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-//        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-//        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
-        // Make the OpenGL context current
-        glfwMakeContextCurrent(window);
-        // Enable v-sync
-        glfwSwapInterval(1);
-
-        // Make the window visible
-        glfwShowWindow(window);
-    }
-
-    private void loop() {
-        // This line is critical for LWJGL's interoperation with GLFW's
-        // OpenGL context, or any context that is managed externally.
-        // LWJGL detects the context that is current in the current thread,
-        // creates the GLCapabilities instance and makes the OpenGL
-        // bindings available for use.
         GL.createCapabilities();
 
-        // Set the clear color
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        glEnable(GL_DEPTH_TEST);
-        System.out.println("OpenGL: " + glGetString(GL_VERSION));
-
+//        glClearColor( 1.0f,   1.0f,   1.0f,   1.0f);
+        glEnable( GL_DEPTH_TEST );
+        glActiveTexture( GL_TEXTURE1 );
+        glEnable( GL_BLEND );
+        glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+        System.out.println( "OpenGL: " + glGetString( GL_VERSION ) );
         Shader.loadAll();
 
-        Shader.BACKGROUND.enable();
+        Matrix4f pr_matrix = Matrix4f.orthographic( -10.0f, 10.0f, -10.0f * 9.0f / 16.0f, 10.0f * 9.0f / 16.0f, -1.0f, 1.0f );
+        Shader.BACKGROUND.setUniformMat4f( "pr_matrix", pr_matrix );
+        Shader.BACKGROUND.setUniform1i( "tex", 1 );
 
-        Matrix4f projectionMatrix = Matrix4f.orthographic(-10.0f, 10.0f, -10.0f * 9.0f / 16.0f, 10.0f * 9.0f / 16.0f, -1.0f, 1.0f);
-        Shader.BACKGROUND.setUniformMat4f("pr_matrix", projectionMatrix);
+        Shader.BIRD.setUniformMat4f( "pr_matrix", pr_matrix );
+        Shader.BIRD.setUniform1i( "tex", 1 );
 
-        Shader.BACKGROUND.disable();
+        Shader.PIPE.setUniformMat4f( "pr_matrix", pr_matrix );
+        Shader.PIPE.setUniform1i( "tex", 1 );
+
         level = new Level();
+    }
 
+    public void run()
+    {
+        init();
 
-        System.out.println("Supported GLSL version is: " + glGetString(GL_SHADING_LANGUAGE_VERSION));
-
-
-        int i = glGetError();
-        if (i != GL_NO_ERROR) {
-            System.out.println(i);
-        }
-
-
-        // Run the rendering loop until the user has attempted to close
-        // the window or has pressed the ESCAPE key.
-        while (!glfwWindowShouldClose(window)) {
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
-
-
+        long lastTime = System.nanoTime();
+        double delta = 0.0;
+        double ns = 1000000000.0 / 60.0;
+        long timer = System.currentTimeMillis();
+        int updates = 0;
+        int frames = 0;
+        while ( running )
+        {
+            long now = System.nanoTime();
+            delta += ( now - lastTime ) / ns;
+            lastTime = now;
+            if ( delta >= 1.0 )
+            {
+                update();
+                updates++;
+                delta--;
+            }
             render();
-            update();
-
-
+            frames++;
+            if ( System.currentTimeMillis() - timer > 1000 )
+            {
+                timer += 1000;
+                System.out.println( updates + " ups, " + frames + " fps" );
+                updates = 0;
+                frames = 0;
+            }
+            if ( glfwWindowShouldClose( window ) )
+                running = false;
         }
+
+        glfwDestroyWindow( window );
+        glfwTerminate();
     }
 
-    private void update() {
-        // Poll for window events. The key callback above will only be
-        // invoked during this call.
+    private void update()
+    {
         glfwPollEvents();
-        if (Input.keys[GLFW_KEY_SPACE]) {
-            System.out.println("FLAP!");
+        level.update();
+        if ( level.isGameOver() )
+        {
+            level = new Level();
         }
     }
 
-    private void render() {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    private void render()
+    {
+        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );  // sets screen color to glClearColor we set
         level.render();
-        glfwSwapBuffers(window); // swap the color buffers
+
+        int error = glGetError();
+        if ( error != GL_NO_ERROR )
+            System.out.println( error );
+
+        glfwSwapBuffers( window );
     }
 
-    public static void main(String[] args) {
-        new Main().run();
+    public static void main( String[] args )
+    {
+        new Main().start();
     }
+
 }
-
